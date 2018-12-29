@@ -1,2 +1,8 @@
 data/*
 __pycache__/*
+LSTM0.pickle
+LSTM_model.pickle
+*.pickle
+*.csv
+*.txt
+*.pyc
