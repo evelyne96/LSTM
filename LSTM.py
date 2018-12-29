@@ -29,7 +29,6 @@ class LSTM:
     def __init__(self, h_size=100, word_dim=100):
         self.h_size = h_size
         self.word_dim = word_dim
-        self.bptt_truncate = 4
 
         # Parameters
         self.w_fh = np.random.uniform(-np.sqrt(1./word_dim), np.sqrt(1./word_dim), (h_size, h_size))
@@ -89,18 +88,18 @@ class LSTM:
 
     def forward(self, x):
         # The total number of time steps
-        t = len(x)
+        t_steps = len(x)
         # During forward propagation we save all hidden states in s because need them later.
         # T+1 since the first one by indexing 0-1 will index the last element, so we don't need to care about that
-        f = np.zeros((t + 1, self.h_size, 1))
-        i = np.zeros((t, self.h_size, 1))
-        o = np.zeros((t, self.h_size, 1))
-        c = np.zeros((t + 1, self.h_size, 1))
-        c_curr = np.zeros((t, self.h_size, 1))
-        h = np.zeros((t + 1, self.h_size, 1))
-        y = np.zeros((t, self.word_dim, 1))
+        f = np.zeros((t_steps + 1, self.h_size, 1))
+        i = np.zeros((t_steps, self.h_size, 1))
+        o = np.zeros((t_steps, self.h_size, 1))
+        c = np.zeros((t_steps + 1, self.h_size, 1))
+        c_curr = np.zeros((t_steps, self.h_size, 1))
+        h = np.zeros((t_steps + 1, self.h_size, 1))
+        y = np.zeros((t_steps, self.word_dim, 1))
 
-        for t in np.arange(t):
+        for t in np.arange(t_steps):
             f[t] = sigmoid(np.dot(self.w_fh, h[t-1]) + self.w_fx[:, x[t]].reshape(self.h_size, 1) + self.b_f)
             i[t] = sigmoid(np.dot(self.w_ih, h[t-1]) + self.w_ix[:, x[t]].reshape(self.h_size, 1) + self.b_i)
             o[t] = sigmoid(np.dot(self.w_oh, h[t-1]) + self.w_ox[:, x[t]].reshape(self.h_size, 1) + self.b_o)
@@ -134,13 +133,13 @@ class LSTM:
             # one hot encoding
             x_t = np.zeros((self.word_dim, 1))
             x_t[x[t]] = 1
-
-            delta_h = np.dot(self.w_v.T, delta_y_[t]) + delta_h[t+1]
-            delta_c = delta_c[t+1] * f[t+1] + delta_h * o[t] * dtanh(c[t])
-            delta_f += delta_c * c[t-1] * dsigmoid(f[t])
-            delta_i += delta_c * c_curr[t] * dsigmoid(i[t])
-            delta_o += delta_h * dsigmoid(o[t]) * np.tanh(c[t])
-            delta_c_curr += delta_c * i[t] * dtanh(c_curr[t])
+            
+            delta_h[t] = np.dot(self.w_v.T, delta_y_[t]) + delta_h[t+1]
+            delta_c[t] = delta_c[t+1] * f[t+1] + delta_h[t] * o[t] * dtanh(c[t])
+            delta_f[t] = delta_c[t] * c[t-1] * dsigmoid(f[t])
+            delta_i[t] = delta_c[t] * c_curr[t] * dsigmoid(i[t])
+            delta_o[t] = delta_h[t] * dsigmoid(o[t]) * np.tanh(c[t])
+            delta_c_curr[t] += delta_c[t] * i[t] * dtanh(c_curr[t])
 
             # W_v, b_v
             self.dLdWv += np.outer(delta_y_[t], h[t].T)
