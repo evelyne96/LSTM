@@ -11,7 +11,6 @@ start_token = "START_TOKEN"
 end_token = "END_TOKEN"
 padding_token = "PADDING_TOKEN"
 max_len = 50
-vocabulary_size = 40000
 hidden_layers = 64
 
 class TrainingDataType(IntEnum):
@@ -75,7 +74,7 @@ def create_trump_data():
 
     vocabulary_size = len(word_index)
 
-    return X_train, y_train, word_index, index_word
+    return X_train, y_train, word_index, index_word, vocabulary_size
 
 def create_en_de_data(limit=5000):
     en_file = './data/DE_EN/train.en'
@@ -108,7 +107,7 @@ def create_en_de_data(limit=5000):
     y_train = [numpy.append(y, word_index[end_token]) for y in y_train]
 
     vocabulary_size = len(word_index)
-    return X_train, y_train, word_index, index_word
+    return X_train, y_train, word_index, index_word, vocabulary_size
 
 def create_test_data():
     X_train = []
@@ -125,7 +124,7 @@ def create_test_data():
     word_index = dict([(word,ind) for ind,word in enumerate(index_word)])
     vocabulary_size = len(word_index)
 
-    return X_train, y_train, word_index, index_word
+    return X_train, y_train, word_index, index_word, vocabulary_size
 
 def create_training_data(type=TrainingDataType.TRUMP):
     if type == TrainingDataType.TRUMP:

@@ -6,3 +6,4 @@ LSTM_model.pickle
 *.csv
 *.txt
 *.pyc
+models/*
