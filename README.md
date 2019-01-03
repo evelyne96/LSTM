@@ -1,5 +1,12 @@
 # LSTM using only numpy
 
+##Documentation
+The documentation listed here contains the detailed description of the problem, use of the project and the theoretical backround used to implement the module.
+
+https://www.overleaf.com/read/pbhzhvrzbpjq
+
+
+
 ## References:
 
 

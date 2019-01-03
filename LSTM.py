@@ -1,29 +1,8 @@
 #!/usr/bin/env python3
 import numpy as np
+import random
 from datetime import datetime
-
-# Helpers
-
-
-def sigmoid(x):
-    return 1/(1+np.exp(-x))
-
-
-def dsigmoid(x):
-    return x * (1-x)
-
-
-def tanh(x):
-    return np.tanh(x)
-
-
-def dtanh(x):
-    return 1 - (x * x)
-
-
-def softmax(x):
-    return np.exp(x) / np.sum(np.exp(x))
-
+from utils import sigmoid, dsigmoid, tanh, dtanh, softmax
 
 class LSTM:
     def __init__(self, h_size=100, word_dim=100):
@@ -100,10 +79,12 @@ class LSTM:
         y = np.zeros((t_steps, self.word_dim, 1))
 
         for t in np.arange(t_steps):
-            f[t] = sigmoid(np.dot(self.w_fh, h[t-1]) + self.w_fx[:, x[t]].reshape(self.h_size, 1) + self.b_f)
-            i[t] = sigmoid(np.dot(self.w_ih, h[t-1]) + self.w_ix[:, x[t]].reshape(self.h_size, 1) + self.b_i)
-            o[t] = sigmoid(np.dot(self.w_oh, h[t-1]) + self.w_ox[:, x[t]].reshape(self.h_size, 1) + self.b_o)
-            c_curr[t] = sigmoid(np.dot(self.w_ch, h[t-1]) + self.w_cx[:, x[t]].reshape(self.h_size, 1) + self.b_c)
+            x_t = np.zeros((self.word_dim, 1))
+            x_t[x[t]] = 1
+            f[t] = sigmoid(np.dot(self.w_fh, h[t-1]) + np.dot(self.w_fx, x_t) + self.b_f)
+            i[t] = sigmoid(np.dot(self.w_ih, h[t-1]) + np.dot(self.w_ix, x_t) + self.b_i)
+            o[t] = sigmoid(np.dot(self.w_oh, h[t-1]) + np.dot(self.w_ox, x_t) + self.b_o)
+            c_curr[t] = sigmoid(np.dot(self.w_ch, h[t-1]) + np.dot(self.w_cx, x_t) + self.b_c)
             c[t] = f[t] * c[t-1] + i[t] * c_curr[t]
             h[t] = o[t] * np.tanh(c[t])
             # Soft-max
@@ -211,9 +192,14 @@ class LSTM:
         # -1/N * sum(y_n * log(o_n))
         return -1 * self.calculate_total_loss(x,y)/N
 
-    def predict(self, x):
+    def predict(self, x, random_on=True):
         # Perform forward propagation and return index of the highest score
         _, _, _, _, _, _, y = self.forward(x)
-        return np.argmax(y[-1])
+        if random_on:
+            flattened_list = [value for x in y[-1] for value in x]
+            possibilities = np.argsort(flattened_list)
+            return possibilities[random.randint(0, 15)]
+        else:
+            return np.argmax(y[-1])
 
 
